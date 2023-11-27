@@ -1,0 +1,6 @@
+{
+  "name": "Your Workspace Name",
+  "dockerFile": "Dockerfile",
+  "forwardPorts": [8080],
+  "postCreateCommand": "echo 'Codespace is ready!'"
+}
