@@ -1,7 +1,17 @@
 services:
+  modify_jenkins_yaml:
+    image: mikefarah/yq
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    environment:
+      - PROFILE=${PROFILE}
+    command: /bin/sh -c "yq e '.nodes[0].permanent.launcher.ssh.host = \"desktop-jenkins_agent-1-$PROFILE\"' -i /var/jenkins_home/dockerfiles/jenkins.yaml"
   sidekick_service:
     # Configuration for the sidekick service
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:sidekick_${BRANCH_SUFFIX}
+    environment:
+      - PROFILE=${PROFILE}
+      - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     stdin_open: true
     tty: true
     entrypoint: sh -c "/usr/local/bin/keygen.sh /ssh-dir" # Runs the keygen.sh script and specifies the output directory
@@ -15,6 +25,9 @@ services:
       retries: 5
   jenkins_controller:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:simple_controller_${BRANCH_SUFFIX}
+    environment:
+      - PROFILE=${PROFILE}
+      - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     restart: on-failure
     ports:
       - "8080:8080"
@@ -24,6 +37,8 @@ services:
     depends_on:
       sidekick_service:
         condition: service_completed_successfully # Depends on the successful completion of the sidekick_service
+      modify_jenkins_yaml:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "[ -f /ssh-dir/conductor_ok ] || exit 1"]
       # Checks if the conductor_ok file exists in the /ssh-dir path
@@ -32,6 +47,9 @@ services:
       retries: 5
   default_agent:
     image: jenkins/ssh-agent:5.30.0
+    environment:
+      - PROFILE=${PROFILE}
+      - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     container_name: desktop-jenkins_agent-1-default
     depends_on:
       sidekick_service:
@@ -48,6 +66,9 @@ services:
       - agent-ssh-dir:/home/jenkins/.ssh:ro # Mounts the agent-ssh-dir volume to the /home/jenkins/.ssh path inside the container as read-only
   maven:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:maven_agent_${BRANCH_SUFFIX}
+    environment:
+      - PROFILE=${PROFILE}
+      - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     container_name: desktop-jenkins_agent-1-maven
     profiles:
       - maven
@@ -66,6 +87,9 @@ services:
       - agent-ssh-dir:/home/jenkins/.ssh:ro # Mounts the agent-ssh-dir volume to the /home/jenkins/.ssh path inside the container as read-only
   python:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:python_agent_${BRANCH_SUFFIX}
+    environment:
+      - PROFILE=${PROFILE}
+      - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     container_name: desktop-jenkins_agent-1-python
     profiles:
       - python
@@ -85,6 +109,7 @@ services:
   node:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:node_agent_${BRANCH_SUFFIX}
     environment:
+      - PROFILE=${PROFILE}
       - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     container_name: desktop-jenkins_agent-1-node
     profiles:
@@ -107,6 +132,7 @@ services:
   android:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:android_agent_${BRANCH_SUFFIX}
     environment:
+      - PROFILE=${PROFILE}
       - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     container_name: desktop-jenkins_agent-1-android
     profiles:
@@ -128,6 +154,9 @@ services:
       - agent-ssh-dir:/home/jenkins/.ssh:ro # Mounts the agent-ssh-dir volume to the /home/jenkins/.ssh path inside the container as read-only
   multi_jenkins_controller:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:simple_controller_${BRANCH_SUFFIX}
+    environment:
+      - PROFILE=${PROFILE}
+      - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     restart: on-failure
     ports:
       - "8080:8080"
@@ -148,6 +177,7 @@ services:
   multi:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:node_agent_${BRANCH_SUFFIX}
     environment:
+      - PROFILE=${PROFILE}
       - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     container_name: desktop-jenkins_agent-1-multi
     profiles:
@@ -171,6 +201,7 @@ services:
   golang:
     image: ${IMAGE_PREFIX}/${GHCR_USERNAME}/quickstart-tutorials/jenkinsci-tutorials:golang_${BRANCH_SUFFIX}
     environment:
+      - PROFILE=${PROFILE}
       - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
     container_name: desktop-jenkins_agent-1-golang
     profiles:
