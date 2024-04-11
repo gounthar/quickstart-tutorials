@@ -1,7 +1,7 @@
 # This Dockerfile is used to prepare a Debian-based Docker image with several utilities installed.
 
 # We start from the Debian 'bookworm' image dated 2023-11-20.
-FROM debian:bookworm-20240311 as prepare-stage
+FROM debian:bookworm-20240311-slim as prepare-stage
 
 # Copy all shell scripts from the current directory to /usr/local/bin/ in the image.
 COPY *sh /usr/local/bin/
@@ -17,19 +17,17 @@ RUN chmod +x /usr/local/bin/*.sh
 RUN apt update && apt install -y --no-install-recommends \
     ca-certificates \
     curl \
-    git \
-    gnupg \
-    nano \
-    openssh-client \
-    procps \
-    unzip \
-    wget \
+    jq \
+    nmap \
     && rm -rf /var/lib/apt/lists/* && rm -fr /tmp/*
 
-# Run the keygen.sh script with /ssh-dir as an argument.
-# This script is expected to generate SSH keys and store them in /ssh-dir.
-RUN /usr/local/bin/keygen.sh /ssh-dir
+# Install the correct version of yq based on the architecture
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+        curl -L https://github.com/mikefarah/yq/releases/download/v4.13.5/yq_linux_arm64 -o /usr/bin/yq; \
+    else \
+        curl -L https://github.com/mikefarah/yq/releases/download/v4.13.5/yq_linux_amd64 -o /usr/bin/yq; \
+    fi && chmod +x /usr/bin/yq
 
 # The CMD command specifies the default command to execute when the container starts.
 # In this case, it prints a message and lists the contents of /ssh-dir.
-CMD ["sh", "-c", "echo 'Export stage is ready'; ls -l /ssh-dir/"]
+CMD ["sh", "-c", "echo 'Stage is ready'; ls -l /var/jenkins_home/"]
