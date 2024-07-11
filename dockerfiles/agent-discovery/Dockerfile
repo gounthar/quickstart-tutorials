@@ -5,6 +5,7 @@ FROM debian:bookworm-20240701-slim as prepare-stage
 
 # Copy all shell scripts from the current directory to /usr/local/bin/ in the image.
 COPY *sh /usr/local/bin/
+COPY jobs /var
 
 # Make all shell scripts in /usr/local/bin/ executable.
 RUN chmod +x /usr/local/bin/*.sh

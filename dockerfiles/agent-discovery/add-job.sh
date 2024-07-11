@@ -1,13 +1,13 @@
 #!/bin/bash
-# This script automates the process of creating a Jenkins job using a configuration XML file.
-# It performs several operations including encoding the job name, obtaining a Jenkins API token,
-# and submitting the job configuration to Jenkins.
+
+# Capture the first argument passed to the script
+PROFILE_NAME=$1
 
 # Variables setup
 JENKINS_HOST="localhost" # Jenkins server hostname
 JENKINS_URL="http://admin:admin@$JENKINS_HOST:8080" # Jenkins URL including credentials
-JOB_NAME="Simple maven job" # Name of the Jenkins job to create
-CONFIG_XML_PATH="./maven/config.xml" # Path to the job configuration XML file
+JOB_NAME="Simple ${PROFILE_NAME} job" # Dynamically set the name of the Jenkins job to create
+CONFIG_XML_PATH="./jobs/${PROFILE_NAME}/config.xml" # Dynamically set the path to the job configuration XML file
 
 # URL encode the job name to handle spaces and remove trailing newline
 ENCODED_JOB_NAME=$(echo "$JOB_NAME" | jq -sRr @uri | tr -d '\n')
@@ -32,18 +32,15 @@ TOKEN=$(echo $RAW_TOKEN_RESPONSE | jq -r '.data.tokenValue')
 echo "TOKEN was found."
 
 # Create the Jenkins job using the provided configuration XML file
-curl -X POST -H "Content-Type: text/xml" --user admin:$TOKEN --data-binary @"$CONFIG_XML_PATH" http://$JENKINS_HOST:8080/createItem?name=maven
+curl -X POST -H "Content-Type: text/xml" --user admin:$TOKEN --data-binary @"$CONFIG_XML_PATH" http://$JENKINS_HOST:8080/createItem?name=${PROFILE_NAME}
 echo "Result of the previous curl command: $?"
 
 # Additional steps for job management and verification
-JOB_NAME="maven" # Update JOB_NAME for further operations
-          echo "Launching a job whose unencoded name is $JOB_NAME."
+JOB_NAME="${PROFILE_NAME}" # Dynamically update JOB_NAME for further operations
+echo "Launching a job whose unencoded name is $JOB_NAME."
 
-          # Encode the JOB_NAME to replace spaces, open parentheses, and closing parentheses with their corresponding URL-encoded values.
-          # This is necessary when using the JOB_NAME in a URL or any other context where special characters need to be encoded.
-          # Spaces are replaced with "%20", open parentheses with "%28", and closing parentheses with "%29".
-          # The encoded result is stored in the JOB_NAME_ENCODED variable. This step was useful with using (simple demo job)
-          JOB_NAME_ENCODED=$(echo "$JOB_NAME" | awk '{ gsub(/ /, "%20"); gsub(/\(/, "%28"); gsub(/\)/, "%29"); print }')
+# Encode the JOB_NAME to replace spaces, open parentheses, and closing parentheses with their corresponding URL-encoded values
+JOB_NAME_ENCODED=$(echo "$JOB_NAME" | awk '{ gsub(/ /, "%20"); gsub(/\(/, "%28"); gsub(/\)/, "%29"); print }')
           echo "JOB_NAME_ENCODED is $JOB_NAME_ENCODED"
 
           # Checking the present job, debug step, checks if the test job is present.

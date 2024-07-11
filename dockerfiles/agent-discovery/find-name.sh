@@ -68,6 +68,7 @@ while true; do
       DETECTED_PROFILE=$(echo "$MACHINE_NAME" | awk -F'-' '{print $NF}')
       # Display the extracted profile
       echo "Detected profile: $DETECTED_PROFILE"
+      export DETECTED_PROFILE
 
       # Use yq to update the jenkins.yaml file
       # We replace the host value of the ssh jenkins docker agent node in jenkins.yaml file with the MACHINE_NAME variable
@@ -96,3 +97,5 @@ echo "Jenkins version is: $JENKINS_VERSION"
 # Use the token in the curl command to reload the configuration
 # curl -X POST "http://admin:admin@jenkins_controller:8080/reload-configuration-as-code/?casc-reload-token=$JCASC_TOKEN"
 curl -X POST "http://admin:admin@jenkins_controller:8080/reload-configuration-as-code/?casc-reload-token=thisisnotsecure"
+
+#
