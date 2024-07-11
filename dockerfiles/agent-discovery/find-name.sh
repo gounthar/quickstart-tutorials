@@ -63,6 +63,11 @@ while true; do
 
       # Export the MACHINE_NAME variable to the environment
       export MACHINE_NAME
+      # Extract the profile name from the MACHINE_NAME variable
+      # Assuming MACHINE_NAME follows the pattern "desktop-jenkins_agent-1-<profile>"
+      DETECTED_PROFILE=$(echo "$MACHINE_NAME" | awk -F'-' '{print $NF}')
+      # Display the extracted profile
+      echo "Detected profile: $DETECTED_PROFILE"
 
       # Use yq to update the jenkins.yaml file
       # We replace the host value of the ssh jenkins docker agent node in jenkins.yaml file with the MACHINE_NAME variable

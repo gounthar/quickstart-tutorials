@@ -1,48 +1,42 @@
 #!/bin/bash
-#set -euxo pipefail
+# This script automates the process of creating a Jenkins job using a configuration XML file.
+# It performs several operations including encoding the job name, obtaining a Jenkins API token,
+# and submitting the job configuration to Jenkins.
 
-# Variables
-JENKINS_HOST="localhost"
-JENKINS_URL="http://admin:admin@$JENKINS_HOST:8080"
-JOB_NAME="Simple maven job"
-CONFIG_XML_PATH="./Simple maven job/config.xml"
+# Variables setup
+JENKINS_HOST="localhost" # Jenkins server hostname
+JENKINS_URL="http://admin:admin@$JENKINS_HOST:8080" # Jenkins URL including credentials
+JOB_NAME="Simple maven job" # Name of the Jenkins job to create
+CONFIG_XML_PATH="./maven/config.xml" # Path to the job configuration XML file
 
 # URL encode the job name to handle spaces and remove trailing newline
 ENCODED_JOB_NAME=$(echo "$JOB_NAME" | jq -sRr @uri | tr -d '\n')
 
-# Ensure the CONFIG_XML_PATH is correctly referenced
+# Convert the relative path of the configuration XML to an absolute path
 ABSOLUTE_CONFIG_XML_PATH=$(realpath "$CONFIG_XML_PATH")
 
- # The following steps are used to test the Jenkins stack.
-          # It includes steps to install dependencies, create a token for the admin user, launch a job, wait for the job to start running,
-          # wait for the job to complete, and check the job status.
-          # If the job fails, it gives the console output of why it failed and exits with a non-zero status to fail the step and stop the workflow.
-          # If the job succeeds, it prints "Job succeeded".
-          # The detailed steps are documented in the comments within the code block.
+# Fetch Jenkins version to test connectivity and authentication
+JENKINS_VERSION=$(curl -s -I -k http://admin:admin@$JENKINS_HOST:8080 | grep -i '^X-Jenkins:' | awk '{print $2}')
+echo "Jenkins version is: $JENKINS_VERSION"
 
-          # set -x
-          # Installing dependencies
-          # To check the version of Jenkins, load the top page or any .../api/* page and check for the X-Jenkins response header. This contains the version number of Jenkins, like "1.404" This is also a good way to check if an URL is a Jenkins URL.
-          JENKINS_VERSION=$(curl -s -I -k http://admin:admin@$JENKINS_HOST:8080 | grep -i '^X-Jenkins:' | awk '{print $2}')
-          echo "Jenkins version is: $JENKINS_VERSION"
+# Obtain a crumb for CSRF protection
+CRUMB=$(curl -s -k http://admin:admin@$JENKINS_HOST:8080/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\) -c cookies.txt)
+echo "CRUMB was found."
 
-          # Before launching a job, we need to create a token for the admin user
-          CRUMB=$(curl -s -k http://admin:admin@$JENKINS_HOST:8080/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\) -c cookies.txt)
-          echo "CRUMB was found."
-
-# Attempt to generate a new token and print the raw response for debugging
+# Generate a new API token for authentication
 RAW_TOKEN_RESPONSE=$(curl -s -k "http://admin:admin@$JENKINS_HOST:8080/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken" --data "newTokenName=kb-token" -b cookies.txt -H "$CRUMB")
 echo "Raw token response: $RAW_TOKEN_RESPONSE"
 
-          TOKEN=$(echo $RAW_TOKEN_RESPONSE | jq -r '.data.tokenValue')
-          echo "TOKEN was found."
+# Extract the token value from the raw token response
+TOKEN=$(echo $RAW_TOKEN_RESPONSE | jq -r '.data.tokenValue')
+echo "TOKEN was found."
 
-          # Creating the Job from the config.xml file
-          curl -X POST -H "Content-Type: text/xml" --user admin:$TOKEN --data-binary @"$CONFIG_XML_PATH" http://$JENKINS_HOST:8080/createItem?name=maven #${{ matrix.dir }}
-# Echo the result of the previous curl command to the log
+# Create the Jenkins job using the provided configuration XML file
+curl -X POST -H "Content-Type: text/xml" --user admin:$TOKEN --data-binary @"$CONFIG_XML_PATH" http://$JENKINS_HOST:8080/createItem?name=maven
 echo "Result of the previous curl command: $?"
-          # Let's set the JOB_NAME it's same as the running tutorial (i.e. maven, python, node)
-          JOB_NAME="maven"
+
+# Additional steps for job management and verification
+JOB_NAME="maven" # Update JOB_NAME for further operations
           echo "Launching a job whose unencoded name is $JOB_NAME."
 
           # Encode the JOB_NAME to replace spaces, open parentheses, and closing parentheses with their corresponding URL-encoded values.
