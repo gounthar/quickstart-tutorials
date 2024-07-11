@@ -2,16 +2,12 @@
 
 # Capture the first argument passed to the script
 PROFILE_NAME=$1
-cd /var/ || exit
-ls -artl
-tree
-cd -
 
 # Variables setup
 JENKINS_HOST="jenkins_controller" # Jenkins server hostname
 JENKINS_URL="http://admin:admin@$JENKINS_HOST:8080" # Jenkins URL including credentials
 JOB_NAME="Simple ${PROFILE_NAME} job" # Dynamically set the name of the Jenkins job to create
-CONFIG_XML_PATH="/var/jobs/${PROFILE_NAME}/config.xml" # Dynamically set the path to the job configuration XML file
+CONFIG_XML_PATH="/root/jobs/${PROFILE_NAME}/config.xml" # Dynamically set the path to the job configuration XML file
 
 # URL encode the job name to handle spaces and remove trailing newline
 ENCODED_JOB_NAME=$(echo "$JOB_NAME" | jq -sRr @uri | tr -d '\n')
