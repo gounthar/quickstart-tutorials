@@ -98,4 +98,6 @@ echo "Jenkins version is: $JENKINS_VERSION"
 # curl -X POST "http://admin:admin@jenkins_controller:8080/reload-configuration-as-code/?casc-reload-token=$JCASC_TOKEN"
 curl -X POST "http://admin:admin@jenkins_controller:8080/reload-configuration-as-code/?casc-reload-token=thisisnotsecure"
 
-#
+# Call the add-job.sh script to create a new Jenkins job well suited to the current profile
+# The add-job.sh script is located in the same directory as this script
+add-job.sh "$DETECTED_PROFILE"
