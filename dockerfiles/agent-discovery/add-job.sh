@@ -2,7 +2,8 @@
 
 # Capture the first argument passed to the script
 PROFILE_NAME=$1
-cd /var/jobs || exit
+cd /var/ || exit
+ls -artl
 tree
 cd -
 
