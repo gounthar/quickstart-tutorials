@@ -82,7 +82,7 @@ jobs:
 - Updated Docker version information
 - Updated Docker Compose version information
 
-This PR only contains changes to \`docker-versions.txt\` and no other files." \
+This PR only contains changes to docker-versions.txt and no other files." \
                 --base main \
                 --head "$BRANCH_NAME"
             fi
